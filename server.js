@@ -1,18 +1,19 @@
 import 'dotenv/config';
 import express from "express";
 import { errorHandler } from "./middlewares/errorMiddleware.js";
-import movieRoutes from "./routes/movieRoutes.js";
-import cors from 'cors'
+import bookRoutes from "./routes/bookRoutes.js";
+import cors from 'cors';
+
 const app = express();
 
 // cors middleware
-app.use(cors())
+app.use(cors());
 
-//Middleware for JSON parsing
+// Middleware for JSON parsing
 app.use(express.json());
 
-// Movie Routes
-app.use("/api/v1/movies", movieRoutes);
+// Book Routes
+app.use("/api/v1/books", bookRoutes);
 
 // Error handling Middleware
 app.use(errorHandler);
