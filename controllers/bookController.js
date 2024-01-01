@@ -86,21 +86,6 @@ export const updateBook = async (req, res, next) => {
   try {
     const { id: bookId, ...updatedFields } = req.body;
 
-    if (!bookId) {
-      res.status(STATUS_CODE.BAD_REQUEST);
-      throw new Error("Book ID is required for update");
-    }
-
-    if ('id' in updatedFields) {
-      res.status(STATUS_CODE.BAD_REQUEST);
-      throw new Error("Cannot update the book ID directly");
-    }
-
-    if (Object.keys(updatedFields).length === 0) {
-      res.status(STATUS_CODE.BAD_REQUEST);
-      throw new Error("No valid fields to update");
-    }
-
     const books = readBooksFromFile();
     const index = books.findIndex((b) => b.id === bookId);
 
