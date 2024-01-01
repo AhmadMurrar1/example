@@ -27,20 +27,23 @@ export const getBookById = async (req, res, next) => {
     }
     res.send(book);
   } catch (error) {
+    res.status(STATUS_CODE.BAD_REQUEST);
     next(error);
   }
 };
+
 
 // @des      Create a book
 // @route    POST /api/v1/books
 // @access   Public
 export const createBook = async (req, res, next) => {
   try {
-    const { title, author, year, rating } = req.body;
-    if (!title || !author || !year || !rating) {
+    const { title, author, genre, pages, publishedIn, reviews, description, coverImage, price, averageRating, readingProgress } = req.body;
+    // Validating required fields
+    if (!title || !author || !genre || !pages || !publishedIn || !reviews || !description || !coverImage || !price || !averageRating || !readingProgress) {
       res.status(STATUS_CODE.BAD_REQUEST);
       throw new Error(
-        "All fields (title, author, year, rating) are required"
+        "All fields (title, author, genre, pages, publishedIn, reviews, description, coverImage, price, averageRating, readingProgress) are required"
       );
     }
 
@@ -50,7 +53,22 @@ export const createBook = async (req, res, next) => {
       throw new Error("A book with the same title already exists");
     }
 
-    const newBook = { id: uuidv4(), title, author, year, rating };
+    // Generate a unique ID using uuidv4()
+    const newBook = {
+      id: uuidv4(),
+      title,
+      author,
+      genre,
+      pages,
+      publishedIn,
+      reviews,
+      description,
+      coverImage,
+      price,
+      averageRating,
+      readingProgress
+    };
+
     books.push(newBook);
     writeBooksToFile(books);
     res.status(STATUS_CODE.CREATED).send(newBook);
@@ -60,31 +78,33 @@ export const createBook = async (req, res, next) => {
   }
 };
 
+
 // @des      Update a book
 // @route    PUT /api/v1/books/:id
 // @access   Public
 export const updateBook = async (req, res, next) => {
   try {
-    const { title, author, year, rating } = req.body;
-    if (!title || !author || !year || !rating) {
+    const { id, ...updatedFields } = req.body;
+
+    if (id) {
       res.status(STATUS_CODE.BAD_REQUEST);
-      throw new Error(
-        "All fields (title, author, year, rating) are required"
-      );
+      throw new Error("Cannot update the book ID");
     }
+
+    if (Object.keys(updatedFields).length === 0) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("No valid fields to update");
+    }
+
     const books = readBooksFromFile();
-    const index = books.findIndex(b => b.id === req.params.id);
+    const index = books.findIndex((b) => b.id === req.params.id);
+
     if (index === -1) {
       res.status(STATUS_CODE.NOT_FOUND);
       throw new Error("Book was not found!");
     }
-    const lastIndex = books.findIndex(b => b.title === title);
-    if (lastIndex !== -1 && lastIndex !== index) {
-      res.status(STATUS_CODE.BAD_REQUEST);
-      throw new Error("Cannot edit book, a book with such title already exists!");
-    }
 
-    const updatedBook = { ...books[index], title, author, year, rating };
+    const updatedBook = { ...books[index], ...updatedFields };
     books[index] = updatedBook;
     writeBooksToFile(books);
     res.send(updatedBook);
@@ -93,23 +113,25 @@ export const updateBook = async (req, res, next) => {
   }
 };
 
+
 // @des      delete a book
 // @route    DELETE /api/v1/books/:id
 // @access   Public
 export const deleteBook = async (req, res, next) => {
   try {
     const books = readBooksFromFile();
-    const newBookList = books.filter((book) => book.id !== req.params.id);
+    const bookIndex = books.findIndex((book) => book.id === req.params.id);
 
-    if (newBookList.length === books.length) {
+    if (bookIndex === -1) {
       res.status(STATUS_CODE.NOT_FOUND);
       throw new Error("Book was not found");
     }
-    writeBooksToFile(newBookList);
-    res
-      .status(STATUS_CODE.OK)
-      .send(`Book with the id of ${req.params.id} was deleted!`);
+
+    books.splice(bookIndex, 1);
+    writeBooksToFile(books);
+    res.status(STATUS_CODE.OK).send(`Book with the id of ${req.params.id} was deleted!`);
   } catch (error) {
     next(error);
   }
 };
+
