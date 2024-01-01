@@ -84,11 +84,16 @@ export const createBook = async (req, res, next) => {
 // @access   Public
 export const updateBook = async (req, res, next) => {
   try {
-    const { id, ...updatedFields } = req.body;
+    const { id: bookId, ...updatedFields } = req.body;
 
-    if (id) {
+    if (!bookId) {
       res.status(STATUS_CODE.BAD_REQUEST);
-      throw new Error("Cannot update the book ID");
+      throw new Error("Book ID is required for update");
+    }
+
+    if ('id' in updatedFields) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("Cannot update the book ID directly");
     }
 
     if (Object.keys(updatedFields).length === 0) {
@@ -97,7 +102,7 @@ export const updateBook = async (req, res, next) => {
     }
 
     const books = readBooksFromFile();
-    const index = books.findIndex((b) => b.id === req.params.id);
+    const index = books.findIndex((b) => b.id === bookId);
 
     if (index === -1) {
       res.status(STATUS_CODE.NOT_FOUND);
@@ -112,6 +117,7 @@ export const updateBook = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 // @des      delete a book
